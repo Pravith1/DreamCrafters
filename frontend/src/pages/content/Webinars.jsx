@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { webinarAPI } from '../../api'
+import { normalizeWebinar } from '../../utils/m2normalize'
 import DashboardLayout from '../../components/DashboardLayout'
 import SpotlightCard from '../../components/reactbits/SpotlightCard'
 import AnimatedContent from '../../components/reactbits/AnimatedContent'
@@ -16,9 +17,20 @@ export default function Webinars() {
     setLoading(true)
     setError(null)
     try {
-      const res = await webinarAPI.getAll()
-      const data = res.data
-      setWebinars(data.data || data.webinars || data || [])
+      const [listRes, mineRes] = await Promise.all([
+        webinarAPI.getAll(),
+        webinarAPI.getMyRegistrations().catch(() => ({ data: { data: [] } })),
+      ])
+      const list = listRes.data?.data || listRes.data?.webinars || []
+      const mine = mineRes.data?.data || []
+      const mineIds = new Set(mine.map((w) => w.id))
+      const arr = Array.isArray(list) ? list : []
+      setWebinars(
+        arr.map((w) => ({
+          ...normalizeWebinar(w),
+          isRegistered: mineIds.has(w.id),
+        }))
+      )
     } catch (err) {
       console.error('Error fetching webinars:', err)
       setError(err.response?.data?.error || err.message)
@@ -74,8 +86,10 @@ export default function Webinars() {
               {w.description && <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1rem', lineHeight: 1.5 }}>{w.description}</p>}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
                 {w.host_name && <span>👨‍🏫 {w.host_name}</span>}
-                <span>📅 {new Date(w.scheduled_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                {w.duration_minutes && <span>⏱️ {w.duration_minutes} minutes</span>}
+                <span>📅 {new Date(w.scheduled_at || w.scheduledAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                {(w.duration_minutes != null || w.durationMinutes != null) && (
+                  <span>⏱️ {(w.duration_minutes ?? w.durationMinutes)} minutes</span>
+                )}
                 {w.max_participants && <span>👥 {w.registered_count || 0}/{w.max_participants} registered</span>}
               </div>
               {w.max_participants && (
@@ -90,9 +104,12 @@ export default function Webinars() {
                   Cancel Registration
                 </button>
               ) : (
-                <button className="btn btn-primary btn-full btn-sm" onClick={() => registerWebinar(w.id)}
-                  disabled={registering === w.id}>
-                  {registering === w.id ? 'Registering...' : 'Register Now'}
+                <button
+                  className="btn btn-primary btn-full btn-sm"
+                  onClick={() => registerWebinar(w.id)}
+                  disabled={registering === w.id || w.is_full}
+                >
+                  {registering === w.id ? 'Registering...' : w.is_full ? 'Full' : 'Register Now'}
                 </button>
               )}
             </SpotlightCard>
