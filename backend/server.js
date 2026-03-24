@@ -10,6 +10,7 @@ const adminAuthRouter = require('./routes/adminAuth');
 const studyPlannerRouter = require('./routes/studyPlanner');
 const careerPathRoutes = require('./routes/careerPaths');
 const webinarRoutes = require('./routes/webinars');
+const mentorRequestRoutes = require('./routes/mentorRequests');
 const chatRoutes = require('./routes/chat');
 const ragRoutes = require('./routes/rag');
 
@@ -30,6 +31,7 @@ app.use('/api/admin/auth', adminAuthRouter);
 // that will cause 401s on public M2 endpoints if mounted first.
 app.use('/api', careerPathRoutes);
 app.use('/api', webinarRoutes);
+app.use('/api', mentorRequestRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/rag', ragRoutes);
 
