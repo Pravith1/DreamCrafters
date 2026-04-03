@@ -41,6 +41,18 @@ export const adminAuthAPI = {
   logout: () => api.post('/admin/auth/logout'),
 }
 
+// ===== Admin Management API =====
+export const adminAPI = {
+  getStats: () => api.get('/admin/stats'),
+  getUsers: (params) => api.get('/admin/users', { params }),
+  toggleUserStatus: (id) => api.patch(`/admin/users/${id}/status`),
+  getContent: (params) => api.get('/admin/content', { params }),
+  deleteContent: (id) => api.delete(`/admin/content/${id}`),
+  getWebinars: (params) => api.get('/admin/webinars', { params }),
+  deleteWebinar: (id) => api.delete(`/admin/webinars/${id}`),
+  getMentorships: (params) => api.get('/admin/mentorships', { params }),
+}
+
 // ===== Study Planner API (M3 — Live) =====
 export const studyPlanAPI = {
   generate: (data) => api.post('/study-plans/generate', data),
