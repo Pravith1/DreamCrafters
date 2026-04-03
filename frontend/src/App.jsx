@@ -23,6 +23,13 @@ import ChatBot from './pages/chatbot/ChatBot'
 import Mentors from './pages/chatbot/Mentors'
 import Requests from './pages/educator/Requests'
 
+import AdminLogin from './pages/admin/AdminLogin'
+import AdminDashboard from './pages/admin/AdminDashboard'
+import UserManagement from './pages/admin/UserManagement'
+import ContentManagement from './pages/admin/ContentManagement'
+import WebinarManagement from './pages/admin/WebinarManagement'
+import MentorshipManagement from './pages/admin/MentorshipManagement'
+
 function WebinarsEntry() {
   const { user } = useAuth()
 
@@ -89,6 +96,24 @@ export default function App() {
           } />
           <Route path="/educator/webinars" element={
             <ProtectedRoute allowedRoles={['educator', 'mentor']}><EducatorWebinars /></ProtectedRoute>
+          } />
+
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminLogin />} />
+          <Route path="/admin/dashboard" element={
+            <ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>
+          } />
+          <Route path="/admin/users" element={
+            <ProtectedRoute allowedRoles={['admin']}><UserManagement /></ProtectedRoute>
+          } />
+          <Route path="/admin/content" element={
+            <ProtectedRoute allowedRoles={['admin']}><ContentManagement /></ProtectedRoute>
+          } />
+          <Route path="/admin/webinars" element={
+            <ProtectedRoute allowedRoles={['admin']}><WebinarManagement /></ProtectedRoute>
+          } />
+          <Route path="/admin/mentorship" element={
+            <ProtectedRoute allowedRoles={['admin']}><MentorshipManagement /></ProtectedRoute>
           } />
 
           {/* Catch-all */}

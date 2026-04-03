@@ -1,84 +1,156 @@
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
-import { 
-  Users, 
-  UserCheck, 
-  FileEdit, 
-  Activity, 
-  Settings, 
-  User 
+import React, { useState, useEffect } from 'react'
+import {
+  Users,
+  UserCheck,
+  Video,
+  Calendar,
+  FileText,
+  Handshake,
 } from 'lucide-react'
-import '../student/Dashboard.css'
+import { adminAPI } from '../../api'
+import AdminLayout from '../../components/AdminLayout'
 
 export default function AdminDashboard() {
-  const { user, logout } = useAuth()
-  const navigate = useNavigate()
+  const [stats, setStats] = useState(null)
+  const [recentUsers, setRecentUsers] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  const handleLogout = () => {
-    logout()
-    navigate('/admin')
+  useEffect(() => {
+    loadStats()
+  }, [])
+
+  const loadStats = async () => {
+    try {
+      const res = await adminAPI.getStats()
+      if (res.data.success) {
+        setStats(res.data.stats)
+        setRecentUsers(res.data.recentUsers)
+      }
+    } catch (err) {
+      console.error('Failed to load stats:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <AdminLayout title="Dashboard">
+        <div className="admin-loading">
+          <div className="admin-loading-spinner" />
+        </div>
+      </AdminLayout>
+    )
+  }
+
+  const statCards = [
+    { icon: <Users size={24} />, label: 'Total Students', value: stats?.totalStudents || 0, color: 'blue' },
+    { icon: <UserCheck size={24} />, label: 'Total Educators', value: stats?.totalEducators || 0, color: 'green' },
+    { icon: <Video size={24} />, label: 'Total Webinars', value: stats?.totalWebinars || 0, color: 'purple' },
+    { icon: <Calendar size={24} />, label: 'Study Plans', value: stats?.totalStudyPlans || 0, color: 'orange' },
+    { icon: <FileText size={24} />, label: 'Content Items', value: stats?.totalContent || 0, color: 'teal' },
+    { icon: <Handshake size={24} />, label: 'Mentor Sessions', value: stats?.totalMentorSessions || 0, color: 'red' },
+  ]
+
+  const formatDate = (dateStr) => {
+    return new Date(dateStr).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    })
   }
 
   return (
-    <div className="dashboard-container">
-      <nav className="dashboard-nav">
-        <div className="nav-brand">
-          <h2>DreamCrafters Admin</h2>
+    <AdminLayout title="Dashboard">
+      <div className="admin-page-header">
+        <h1>Admin Dashboard</h1>
+        <p>Overview of platform activity and statistics</p>
+      </div>
+
+      <div className="admin-stats-grid">
+        {statCards.map((s, i) => (
+          <div className="admin-stat-card" key={i}>
+            <div className={`admin-stat-icon ${s.color}`}>{s.icon}</div>
+            <div className="admin-stat-info">
+              <h3>{s.label}</h3>
+              <div className="admin-stat-value">{s.value}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="admin-recent-grid">
+        <div className="admin-card">
+          <div className="admin-card-header">
+            <div className="admin-card-title">
+              <Users size={18} />
+              Recent Registrations
+            </div>
+          </div>
+          {recentUsers.length > 0 ? (
+            <div className="admin-table-wrapper">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Joined</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentUsers.map(u => (
+                    <tr key={u.id}>
+                      <td>
+                        <div style={{ fontWeight: 600 }}>{u.name}</div>
+                        <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>{u.email}</div>
+                      </td>
+                      <td><span className={`admin-badge ${u.role}`}>{u.role}</span></td>
+                      <td><span className={`admin-badge ${u.isActive ? 'active' : 'inactive'}`}>{u.isActive ? 'Active' : 'Inactive'}</span></td>
+                      <td style={{ fontSize: '0.85rem', color: '#6b7280' }}>{formatDate(u.createdAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="admin-empty">
+              <p>No users registered yet</p>
+            </div>
+          )}
         </div>
-        <div className="nav-actions">
-          <span className="user-greeting">Hello, {user?.name}!</span>
-          <button onClick={handleLogout} className="btn btn-logout">Logout</button>
-        </div>
-      </nav>
 
-      <div className="dashboard-content">
-        <div className="welcome-section">
-          <h1>Admin Dashboard</h1>
-          <p className="role-badge admin-badge">Administrator</p>
-        </div>
-
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-icon"><Users size={24} /></div>
-            <h3>Total Students</h3>
-            <p className="stat-value">0</p>
+        <div className="admin-card">
+          <div className="admin-card-header">
+            <div className="admin-card-title">
+              <FileText size={18} />
+              Platform Summary
+            </div>
           </div>
-
-          <div className="stat-card">
-            <div className="stat-icon"><UserCheck size={24} /></div>
-            <h3>Total Educators</h3>
-            <p className="stat-value">0</p>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-icon"><FileEdit size={24} /></div>
-            <h3>Total Activities</h3>
-            <p className="stat-value">0</p>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-icon"><Activity size={24} /></div>
-            <h3>System Status</h3>
-            <p className="stat-value">Active</p>
-          </div>
-        </div>
-
-        <div className="info-section">
-          <div className="info-card">
-            <h3><Settings size={20} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} /> System Management</h3>
-            <p className="empty-state">Admin controls and system settings will appear here.</p>
-          </div>
-
-          <div className="info-card">
-            <h3><User size={20} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} /> Admin Information</h3>
-            <div className="profile-info">
-              <p><strong>Name:</strong> {user?.name}</p>
-              <p><strong>Username:</strong> {user?.username}</p>
-              <p><strong>Role:</strong> Administrator</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#f8f9fc', borderRadius: '8px' }}>
+              <span style={{ color: '#6b7280', fontSize: '0.9rem' }}>Total Users</span>
+              <strong>{(stats?.totalStudents || 0) + (stats?.totalEducators || 0)}</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#f8f9fc', borderRadius: '8px' }}>
+              <span style={{ color: '#6b7280', fontSize: '0.9rem' }}>Active Webinars</span>
+              <strong>{stats?.totalWebinars || 0}</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#f8f9fc', borderRadius: '8px' }}>
+              <span style={{ color: '#6b7280', fontSize: '0.9rem' }}>Content Library</span>
+              <strong>{stats?.totalContent || 0}</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#f8f9fc', borderRadius: '8px' }}>
+              <span style={{ color: '#6b7280', fontSize: '0.9rem' }}>Active Study Plans</span>
+              <strong>{stats?.totalStudyPlans || 0}</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#f8f9fc', borderRadius: '8px' }}>
+              <span style={{ color: '#6b7280', fontSize: '0.9rem' }}>Mentorship Sessions</span>
+              <strong>{stats?.totalMentorSessions || 0}</strong>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </AdminLayout>
   )
 }

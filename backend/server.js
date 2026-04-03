@@ -7,6 +7,7 @@ require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 const studentAuthRouter = require('./routes/studentAuth');
 const educatorAuthRouter = require('./routes/educatorAuth');
 const adminAuthRouter = require('./routes/adminAuth');
+const adminRouter = require('./routes/admin');
 const studyPlannerRouter = require('./routes/studyPlanner');
 const careerPathRoutes = require('./routes/careerPaths');
 const webinarRoutes = require('./routes/webinars');
@@ -25,6 +26,7 @@ app.use(cookieParser());
 app.use('/api/student/auth', studentAuthRouter);
 app.use('/api/educator/auth', educatorAuthRouter);
 app.use('/api/admin/auth', adminAuthRouter);
+app.use('/api/admin', adminRouter);
 
 // Important: New routers must be mounted BEFORE studyPlannerRouter
 // because studyPlannerRouter contains a global router.use(protect)
